@@ -19,7 +19,7 @@ bool RxController(void){
     String StrData = Serial1.readStringUntil('\n');
     delay(10);
     StrData.remove(0,14);     //ダミー，ノードNo，RSSI，機能IDまで捨てる
-    // Serial.println(StrData);
+    //Serial.println(StrData);
     
     for (int i = 0; i < 7; i++){
       int check = StrData.indexOf(',');             //最初のカンマの位置確認
@@ -43,6 +43,8 @@ bool RxController(void){
     Serial.print(AS_Right);
     Serial.print(", AS_Vol = ");
     Serial.print(AS_Vol);
+    Serial.print(", pitchangle = ");
+    Serial.print(pitchangle);
     Serial.print(", SW_ENABLE = ");
     Serial.print(SW_ENABLE);
     Serial.print(", SW_SHOT = ");

@@ -80,7 +80,7 @@ void loop() {
   // if((AF_Signal1 == 0) && (SW_ENABLE == 1) && !EMG_Stop && !ControllerTimeout){
   if((AF_Signal1 == 0) && (SW_ENABLE == 1) && !ControllerTimeout){
     OperationReady = 1;
-    Serial.println("ControllerStatus: Ready");
+    //Serial.println("ControllerStatus: Ready");
   }else{
     OperationReady = 0;
     if(SW_ENABLE == 0){

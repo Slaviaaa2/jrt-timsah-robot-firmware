@@ -53,7 +53,7 @@ void Wheel(void){
 //射出角度の制御
 void Pitch(void){
   //コントローラからの信号をサーボモータの角度に変換する
-  pitchangle = 0.45*AS_Vol+45; //★AS_Vol の値(-100～100) を 0～90に変換
+  pitchangle = 2.5*AS_Vol-342.5; //★AS_Vol の値(-100～100) を 0～90に変換
   ServoON(SERVO1, pitchangle);  //サーボモータに角度を指令
 }
 
@@ -61,8 +61,8 @@ void Pitch(void){
 void Shot(void){
   waitangle = 30;   //待機(装填)位置 90～110程度で調整
   shotangle = 160;  //射出位置 160～180程度で調整
-  Serial.println("SW_SHOT");
-  Serial.println(SW_SHOT);
+  //Serial.println("SW_SHOT");
+  //Serial.println(SW_SHOT);
 
   if(SW_SHOT){
     if((RollerOnOff == 0) && (ShotSeq == 0)){
