@@ -53,60 +53,58 @@ void Wheel(void){
 //射出角度の制御
 void Pitch(void){
   //コントローラからの信号をサーボモータの角度に変換する
-  pitchangle = 2.5*AS_Vol-342.5; //★AS_Vol の値(-100～100) を 0～90に変換
+  long d = AS_Vol;
+  d *= 0.6;
+  // d -= 644.705;
+  pitchangle = (int)d; //★AS_Vol の値(-100～100) を 0～90に変換
   ServoON(SERVO1, pitchangle);  //サーボモータに角度を指令
-}
-
-// 射出用Util
-void ShotRollerControl(void){
-  /*
-  if((RollerOnOff == 0) && (ShotSeq == 0)){
-    //射出ボタンが押され，ローラーが回っていないとき
-    //motor[ROLLER].TxVel = 15000;//ローラー速度に15000を設定 (CAN制御)
-    //MotorON(ROLLER, 50);          //ローラー速度に50[%]を設定(PWM制御) // [80 -> 50]に変更中
-    RollerTime = millis();        //ローラー回転開始時間記録
-    ShotSeq = 1;                  //射出シーケンスを1に
-  }else if((ShotSeq == 1) && ((millis() - RollerTime) > 1000)){
-    //射出シーケンスが1になり，1000msec経過後
-    RollerOnOff = 1;              //ローラー回転状態に設定
-    ShotSeq = 0;                  //射出シーケンスを0に
-  }else */
-  if( RollerOnOff == 1 && ((millis() - RollerTime) > 1000) ){
-    //射出ボタンが押され，ローラーが回っているとき
-    if(((millis() - ShotTime) > 500) && (Shotmove == 0)){
-      ServoON(SHOT, shotangle);   //サーボモータ射出位置設定
-      ShotTime = millis();        //サーボモータ動作開始時間記録
-      Shotmove = 1;               //射出位置動作記録
-      //Serial.println("Shot");
-    }else{
-      //Serial.println("Waiting fot Shot delay");
-    }
-  }
-}
-
-void ShotIdle(void){
-  if((Shotmove == 1) && ((millis() - ShotTime) > 500)){
-    //射出位置動作中に，500msec経過後
-    ServoON(SHOT, waitangle);     //サーボモータ待機位置設定
-    ShotTime = millis();          //サーボモータ動作開始時間記録
-    Shotmove = 0;                 //待機位置動作記録
-    //Serial.println("Return");
-  }else{
-    //Serial.println("Waiting fot Shot delay");
-  }
+ Serial.print("AS_Vol:");
+ Serial.print(AS_Vol);
+ Serial.print("  実際の角度:");
+ Serial.println(pitchangle);
 }
 
 //射出シーケンス
 void Shot(void){
   waitangle = 30;   //待機(装填)位置 90～110程度で調整
   shotangle = 160;  //射出位置 160～180程度で調整
-  //Serial.println("SW_SHOT");
-  //Serial.println(SW_SHOT);
+  Serial.println("SW_SHOT");
+  Serial.println(SW_SHOT);
 
-  if (SW_SHOT && Shotmove == 0){
-    ShotRollerControl();
+  if(SW_SHOT){
+    if((RollerOnOff == 0) && (ShotSeq == 0)){
+      //射出ボタンが押され，ローラーが回っていないとき
+      //motor[ROLLER].TxVel = 15000;//ローラー速度に15000を設定 (CAN制御)
+      MotorON(ROLLER, 80);          //ローラー速度に50[%]を設定(PWM制御)
+      RollerTime = millis();        //ローラー回転開始時間記録
+      ShotSeq = 1;                  //射出シーケンスを1に
+    }else if((ShotSeq == 1) && ((millis() - RollerTime) > 1000)){
+      //射出シーケンスが1になり，1000msec経過後
+      RollerOnOff = 1;              //ローラー回転状態に設定
+      ShotSeq = 0;                  //射出シーケンスを0に
+    }else if( RollerOnOff == 1){
+      //射出ボタンが押され，ローラーが回っているとき
+      if(((millis() - ShotTime) > 500) && (Shotmove == 0)){
+        ServoON(SHOT, shotangle);   //サーボモータ射出位置設定
+        ShotTime = millis();        //サーボモータ動作開始時間記録
+        Shotmove = 1;               //射出位置動作記録
+        //Serial.println("Shot");
+      }else{
+        //Serial.println("Waiting fot Shot delay");
+      }
+    }
+  }else{  //射出ボタンが押されていないとき
+    if((Shotmove == 1) && ((millis() - ShotTime) > 500)){
+      //射出位置動作中に，500msec経過後
+      ServoON(SHOT, waitangle);     //サーボモータ待機位置設定
+      ShotTime = millis();          //サーボモータ動作開始時間記録
+      Shotmove = 0;                 //待機位置動作記録
+      //Serial.println("Return");
+    }else{
+      //Serial.println("Waiting fot Shot delay");
+    }
   }
-  ShotIdle();
+
 }
 
 //ローラー回転のシーケンス
