@@ -57,12 +57,10 @@ SERVO   ： 1 ~ 3
 #define DIR8  61
 
 #define SERVO1 13
-
-// SERVO2,3に問題あり。現在defineを古いほうに切り替えてます。変更するときは両defineのコメント状態を逆にすること。
-#define SERVO2 12 // Old Define
-#define SERVO3 11 // Too
-//#define SERVO2 11 // New Define
-//#define SERVO3 12 // Too
+//#define SERVO2 12
+//#define SERVO3 11
+#define SERVO2 12
+#define SERVO3 11
 
 #define AF1 62
 #define AF2 63
@@ -86,13 +84,13 @@ bool ControllerTimeout = true;  //タイムアウト検知戻り値
 bool Shotmove = 0;            //射出動作中信号
 uint8_t ShotSeq = 0;          //射出動作シーケンスカウント用
 uint8_t RollerSeq = 0;        //チャタリング＆連打対策用
-uint8_t RollerOnOff = 0;      //ローラーON/OFFの切り替え記憶用
+bool RollerOnOff = 0;      //ローラーON/OFFの切り替え記憶用
 uint64_t RollerTime = 0;      //ローラースイッチのチャタリング対策
 unsigned long ShotTime = 0;   //射出動作シーケンスの静定時間設定用
 unsigned int ShotAngle;       //射出用サーボモータ角度
 unsigned int waitangle = 90;  //射出用サーボモータ待機位置
 unsigned int shotangle;       //射出用サーボモータ射出位置
-unsigned int pitchangle = 0;  //ピッチ用サーボモータ角度
+ int pitchangle = 0;  //ピッチ用サーボモータ角度
 
 /********  RMモータ制御に関する構造体  ********
 typedef struct RMmotor {

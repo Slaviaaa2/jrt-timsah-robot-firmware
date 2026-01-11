@@ -19,7 +19,7 @@ bool RxController(void){
     String StrData = Serial1.readStringUntil('\n');
     delay(10);
     StrData.remove(0,14);     //ダミー，ノードNo，RSSI，機能IDまで捨てる
-    //Serial.println(StrData);
+    // Serial.println(StrData);
     
     for (int i = 0; i < 7; i++){
       int check = StrData.indexOf(',');             //最初のカンマの位置確認
@@ -37,22 +37,20 @@ bool RxController(void){
     RxData[1] -= 127;
     RxData[1] = RxData[1]*100/127;
 
-    Serial.print("AS_Left =  ");
-    Serial.print(AS_Left);
-    Serial.print(", AS_Right = ");
-    Serial.print(AS_Right);
-    Serial.print(", AS_Vol = ");
-    Serial.print(AS_Vol);
-    Serial.print(", pitchangle = ");
-    Serial.print(pitchangle);
-    Serial.print(", SW_ENABLE = ");
-    Serial.print(SW_ENABLE);
-    Serial.print(", SW_SHOT = ");
-    Serial.print(SW_SHOT);
-    Serial.print(", SW_ROLLER = ");
-    Serial.print(SW_ROLLER);
-    Serial.print(", OperationReady = ");
-    Serial.println(OperationReady);
+    // Serial.print("AS_Left =  ");
+    // Serial.print(AS_Left);
+    // Serial.print(", AS_Right = ");
+    // Serial.print(AS_Right);
+    // Serial.print(", AS_Vol = ");
+    // Serial.print(RxData[3]);
+    // Serial.print(", SW_ENABLE = ");
+    // Serial.print(SW_ENABLE);
+    // Serial.print(", SW_SHOT = ");
+    // Serial.print(SW_SHOT);
+    // Serial.print(", SW_ROLLER = ");
+    // Serial.print(SW_ROLLER);
+    // Serial.print(", OperationReady = ");
+    // Serial.println(OperationReady);
     //Serial.print(", RxData[0]= ");
     //Serial.print(RxData[0]);
     //Serial.print(", RxData[1]= ");
@@ -68,12 +66,12 @@ bool RxController(void){
     //Serial.print(", RxData[6]= ");
     //Serial.println(RxData[6]);
 
-    ControllerTimeout = false;
+    return ControllerTimeout = false;
 
-  }else if((millis() - ControllerRxTime) > 2000){  //タイムアウト
+  }else if((millis() - ControllerRxTime) > 300){  //タイムアウト
     for (int i = 0; i < 7; i++){
       RxData[i] = 0;
     }
-    ControllerTimeout = true;
+    return ControllerTimeout = true;
   }
 }

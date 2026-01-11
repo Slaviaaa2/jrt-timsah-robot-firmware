@@ -18,117 +18,116 @@ Arduinoシールド ：Ver.2024
 
 #define BITRATE 115200
 
-//コントローラ入力の割付け Ver.2用
+//====================
+// コントローラ入力割付（Ver.2）
+//====================
 #define SW_ENABLE ((RxData[4] & 0b000001) >> 0) //SW1 操作禁止
 #define SW_SHOT   ((RxData[4] & 0b000010) >> 1) //SW2 ディスク押出
 #define SW_ROLLER ((RxData[4] & 0b000100) >> 2) //SW3 ローラー回転
-#define SW4 ((RxData[4] & 0b001000) >> 3)       //SW4 予備
-#define SDA ((RxData[4] & 0b010000) >> 4)       //SDA 予備
-#define SCL ((RxData[4] & 0b100000) >> 5)       //SCL 予備
-#define AS_Left (RxData[0])                     //A1  左スティック
-#define AS_Right (RxData[1])                    //A2  右スティック
-#define AS_Vol (RxData[2])                      //A3  ピッチ調整
-#define A4 (RxData[3])                          //A4  予備
+#define SW4       ((RxData[4] & 0b001000) >> 3) //SW4 予備
+#define SDA       ((RxData[4] & 0b010000) >> 4) //予備
+#define SCL       ((RxData[4] & 0b100000) >> 5) //予備
+#define AS_Left   (RxData[0])                   //A1 左スティック
+#define AS_Right  (RxData[1])                   //A2 右スティック
+#define AS_Vol    (RxData[3])                   //A3 ピッチ調整
+#define A4        (RxData[3])                   //A4 予備
 
-//モータ名とポートの割付け
-#define WHEEL_L MOTOR1  //左タイヤ
-#define WHEEL_R MOTOR2  //右タイヤ
-#define ROLLER MOTOR3   //射出回転
-#define PITCH SERVO1    //ピッチ調整
-#define SHOT SERVO2     //ディスク射出
+//====================
+// モータ・サーボ割付
+//====================
+#define WHEEL_L MOTOR1
+#define WHEEL_R MOTOR2
+#define ROLLER  MOTOR3
+#define PITCH   SERVO1
+#define SHOT    SERVO2
 
-//ロボットからのデジタル入力の割付け
-#define EMG_Stop digitalRead(SW12)  //非常停止スイッチ
+//====================
+// ロボット側入力
+//====================
+#define EMG_Stop digitalRead(SW12)  //非常停止
 
+//====================
+// setup
+//====================
 void setup() {
-  // put your setup code here, to run once:
 
-  Serial.begin(BITRATE);     //PC-Arduino用
-  Serial1.begin(BITRATE);    //コントローラ用
-  Serial2.begin(BITRATE);    //オートレフェリ用
-  // Serial3.begin(9600);    //予備
+  Serial.begin(BITRATE);     // PC通信用
+  Serial1.begin(BITRATE);    // コントローラ用
+  Serial2.begin(BITRATE);    // オートレフェリ用
 
-  //CAN-bus 初期化
-  //mcp2515.reset();
-  //mcp2515.setBitrate(CAN_1000KBPS, MCP_8MHZ);
-  //mcp2515.setNormalMode();
+  Init();                    // init.ino
+  InitMotor();               // init.ino
 
-  Init();                     //init.ino
-  InitMotor();                //init.ino
-  ServoON(SHOT, waitangle);   //射出の初期位置を待機側に
-  ServoON(SERVO3, 90);        //
-
-  //for (int i = 0; i < 8; i++){
-  //  MotorTxData.data[i] = 0;  //モータの指令リセット
-  //  PIDdiff[i] = 0;           //PD制御の誤差をリセット
-  //}
+  // サーボ初期位置
+  ServoON(SHOT, waitangle);  // 射出サーボ待機
+  // ServoON(SERVO3, 90);
 
   delay(1000);
 
-  BuzzerInitOK();             //init.ino
-
+  BuzzerInitOK();
   Serial.println("Init OK");
 }
 
+//====================
+// loop
+//====================
 void loop() {
-  // put your main code here, to run repeatedly:
-  // 周期固定用に開始時間を取得
+
+  // 周期固定用
   StartTime = millis();
 
-  RxController();     //controller.ino
+  RxController();     // controller.ino
 
-  // if((AF_Signal1 == 0) && (SW_ENABLE == 1) && !EMG_Stop && !ControllerTimeout){
-  if((AF_Signal1 == 0) && (SW_ENABLE == 1) && !ControllerTimeout){
+  // 操作可能判定
+  if ((AF_Signal1 == 0) && (SW_ENABLE == 1) && !ControllerTimeout) {
     OperationReady = 1;
-    //Serial.println("ControllerStatus: Ready");
-  }else{
+  } else {
     OperationReady = 0;
-    if(SW_ENABLE == 0){
-      Serial.println("ControllerStatus: Locked");
-    }
-    else{
-      Serial.println("ERR: Controller Connection not Successfully.");
-      Serial.print("ControllerStatus: Unknown(Operation: Not Ready) ");
-      Serial.print(", AF_Signal1:");
-      Serial.print(AF_Signal1);
-      Serial.print(", SW_ENABLE:");
-      Serial.print(SW_ENABLE);
-      Serial.print(", ControllerTimeout:");
-      Serial.println(ControllerTimeout);
-    }
   }
-  SensorDebugLED();   //init.ino
 
-  if(OperationReady == 1){
-    //process.ino にて定義
-    Wheel();
+  SensorDebugLED();
 
-    Shot();
+  //====================
+  // 操作可能時
+  //====================
+  if (OperationReady == 1) {
 
-    Pitch();
-
-    Roller();
+    Wheel();     // 走行
+    Roller();    // ローラー制御（ここで RollerOnOff が決まる）
+    Pitch();   // ピッチサーボ
+    // ===== 重要 =====
+    // ローラーが回っている時だけサーボを許可
+    if (RollerOnOff == true) {
+      Shot();    // 射出サーボ
+    } else {
+      // ローラー停止中はサーボを待機状態に固定
+      ShotSeq  = 0;
+      Shotmove = 0;
+      ServoON(SHOT, waitangle);
+    }
 
     BuzzerOFF();
 
-  }else{
+  }
+  //====================
+  // 操作不可時
+  //====================
+  else {
 
-    RollerOnOff = 0;
-    ShotSeq = 0;
+    RollerOnOff = false;
+    ShotSeq  = 0;
     Shotmove = 0;
-    MotorAllOFF();    //motor.ino
+
+    MotorAllOFF();
     ServoON(SHOT, waitangle);
-        
-    if (AF_Signal1 == 1){
-      Buzzer1ON();    //init.ino
+
+    if (AF_Signal1 == 1) {
+      Buzzer1ON();
     }
   }
 
-  //RMmotorTxData();    //motor.ino
-  //RMmotorRxData();    //motor.ino
-
-  //周期固定用の待機(オーバしたら無視)
-  while ((millis() - StartTime) < (period) ){
+  // 周期固定（オーバーしたら無視）
+  while ((millis() - StartTime) < period) {
     delayMicroseconds(10);
-  }  
+  }
 }
